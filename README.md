@@ -4,7 +4,7 @@ A simple Flask web interface for a chatbot powered by Azure Prompt Flow using Re
 
 ---
 
-![Screenshot of Azure RAG Chatbot Flask Application](assets/chatbot.png)
+<img width="959" height="448" alt="chatbot" src="https://github.com/user-attachments/assets/7dc65de5-2412-47bb-93fe-ad8ce743059a" />
 
 ---
 ## 🧠 Features

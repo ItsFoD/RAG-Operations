@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chatbot</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #e9f0f7;
+            height: 100vh;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-box {
+            width: 100vw;
+            max-width: 500px;
+            height: 60vh;
+            min-height: 320px;
+            overflow-y: auto;
+            border: 1px solid #d0d7de;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: #fff;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            transition: background 0.3s, border 0.3s;
+        }
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            margin: 12px 0;
+        }
+        .user .icon {
+            margin-right: 10px;
+        }
+        .bot .icon {
+            margin-right: 10px;
+        }
+        .user .bubble {
+            background: #e3f2fd;
+            color: #0078d7;
+            border-radius: 16px 16px 4px 16px;
+            padding: 10px 16px;
+            max-width: 75%;
+            word-break: break-word;
+            transition: background 0.3s, color 0.3s;
+        }
+        .bot .bubble {
+            background: #f1f3f4;
+            color: #333;
+            border-radius: 16px 16px 16px 4px;
+            padding: 10px 16px;
+            max-width: 75%;
+            word-break: break-word;
+            transition: background 0.3s, color 0.3s;
+        }
+        .input-area {
+            display: flex;
+            width: 100vw;
+            max-width: 500px;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #b0bec5;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: background 0.3s, color 0.3s, border 0.3s;
+        }
+        .input-area button {
+            margin-left: 10px;
+            padding: 12px 24px;
+            border: none;
+            background: #0078d7;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .input-area button:hover {
+            background: #005fa3;
+        }
+        .dark-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s, color 0.3s;
+        }
+        .dark-toggle-btn:hover {
+            background: #444;
+        }
+        @media (max-width: 600px) {
+            .chat-box, .input-area {
+                max-width: 100vw;
+                width: 100vw;
+            }
+            .dark-toggle-btn {
+                top: 10px;
+                right: 10px;
+                font-size: 0.9rem;
+                padding: 6px 12px;
+            }
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background: #181c24;
+            color: #e0e6ed;
+        }
+        body.dark-mode .chat-box {
+            background: #23272f;
+            border: 1px solid #333a45;
+        }
+        body.dark-mode .user .bubble {
+            background: #22334a;
+            color: #90caf9;
+        }
+        body.dark-mode .bot .bubble {
+            background: #2c313a;
+            color: #e0e6ed;
+        }
+        body.dark-mode .input-area input {
+            background: #23272f;
+            color: #e0e6ed;
+            border: 1px solid #333a45;
+        }
+        body.dark-mode .input-area button {
+            background: #005fa3;
+            color: #fff;
+        }
+        body.dark-mode .input-area button:hover {
+            background: #0078d7;
+        }
+        body.dark-mode .dark-toggle-btn {
+            background: #e0e6ed;
+            color: #23272f;
+        }
+        body.dark-mode .dark-toggle-btn:hover {
+            background: #b0bec5;
+        }
+    </style>
+</head>
+<body>
+    <button class="dark-toggle-btn" id="darkModeBtn">Dark Mode</button>
+    <div class="chat-container">
+        <h2>RAG Chatbot Trial</h2>
+        <div class="chat-box" id="chatBox"></div>
+        <form class="input-area" id="chatForm">
+            <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const darkModeBtn = document.getElementById('darkModeBtn');
+
+        // Penguin SVG icon
+        const penguinSVG = `
+            <svg class="icon" width="32" height="32" viewBox="0 0 64 64" fill="none">
+                <ellipse cx="32" cy="44" rx="18" ry="16" fill="#222"/>
+                <ellipse cx="32" cy="36" rx="12" ry="16" fill="#fff"/>
+                <ellipse cx="32" cy="20" rx="10" ry="10" fill="#222"/>
+                <ellipse cx="27" cy="19" rx="2" ry="3" fill="#fff"/>
+                <ellipse cx="37" cy="19" rx="2" ry="3" fill="#fff"/>
+                <ellipse cx="27" cy="19" rx="1" ry="1.5" fill="#222"/>
+                <ellipse cx="37" cy="19" rx="1" ry="1.5" fill="#222"/>
+                <ellipse cx="32" cy="24" rx="2" ry="1" fill="#ffb300"/>
+                <ellipse cx="32" cy="48" rx="4" ry="2" fill="#ffb300"/>
+                <ellipse cx="32" cy="60" rx="6" ry="2" fill="#bbb"/>
+                <ellipse cx="20" cy="60" rx="3" ry="1" fill="#bbb"/>
+                <ellipse cx="44" cy="60" rx="3" ry="1" fill="#bbb"/>
+                <ellipse cx="22" cy="52" rx="2" ry="4" fill="#222"/>
+                <ellipse cx="42" cy="52" rx="2" ry="4" fill="#222"/>
+            </svg>
+        `;
+
+        // Robot SVG icon
+        const robotSVG = `
+            <svg class="icon" width="32" height="32" viewBox="0 0 64 64" fill="none">
+                <rect x="14" y="20" width="36" height="28" rx="8" fill="#90caf9" stroke="#222" stroke-width="2"/>
+                <rect x="24" y="10" width="16" height="12" rx="6" fill="#b0bec5" stroke="#222" stroke-width="2"/>
+                <rect x="18" y="48" width="8" height="8" rx="2" fill="#b0bec5" stroke="#222" stroke-width="2"/>
+                <rect x="38" y="48" width="8" height="8" rx="2" fill="#b0bec5" stroke="#222" stroke-width="2"/>
+                <circle cx="24" cy="34" r="4" fill="#fff" stroke="#222" stroke-width="2"/>
+                <circle cx="40" cy="34" r="4" fill="#fff" stroke="#222" stroke-width="2"/>
+                <circle cx="24" cy="34" r="2" fill="#222"/>
+                <circle cx="40" cy="34" r="2" fill="#222"/>
+                <rect x="30" y="40" width="4" height="4" rx="2" fill="#ffb300"/>
+                <rect x="31" y="6" width="2" height="6" rx="1" fill="#222"/>
+            </svg>
+        `;
+
+        function appendMessage(sender, text) {
+            const msg = document.createElement('div');
+            msg.className = 'chat-message ' + sender;
+            let icon = '';
+            if (sender === 'user') {
+                icon = penguinSVG;
+            } else {
+                icon = robotSVG;
+            }
+            msg.innerHTML = `
+                ${icon}
+                <div class="bubble">${text}</div>
+            `;
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            userInput.value = '';
+
+            fetch('/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ 'user_input': text })
+            })
+            .then(response => response.json())
+            .then(data => {
+            appendMessage('bot', data.response);
+            })
+            .catch(error => {
+            console.error('Error:', error);
+            appendMessage('bot', 'Sorry, there was an error contacting the backend.');
+            });
+        });
+
+        // Dark mode toggle
+        darkModeBtn.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            darkModeBtn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+        });
+    </script>
+</body>
+</html>
